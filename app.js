@@ -4,12 +4,12 @@
   const REINSERT_MIN = 2;
   const REINSERT_MAX = 5;
   const DEMO_IMAGE_DIR = "bilder0";
-  // Filenames as on disk (NFD umlauts) so relative img paths resolve from file:// and http.
+  // Filenames as served on GitHub Pages / most hosts (NFC umlauts, not macOS NFD).
   const DEMO_IMAGE_FILES = [
     "David Werth.jpg",
     "Frank Sautter.jpg",
-    "Jo\u0308rg Henne.jpg",
-    "Ju\u0308rgen Ma\u0308stling.jpg",
+    "J\u00f6rg Henne.jpg",
+    "J\u00fcrgen M\u00e4stling.jpg",
     "Oliver Bausch.jpg",
     "Vincenzo Biasi.jpg",
     "luigi levigo.png",
@@ -199,6 +199,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
 
   function assetUrl(path) {
     return path
+      .normalize("NFC")
       .split("/")
       .map((segment) => encodeURIComponent(segment))
       .join("/");
