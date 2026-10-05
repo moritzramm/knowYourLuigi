@@ -6,7 +6,7 @@ You see a photo, try to recall who it is, then reveal the name and details. Mark
 
 The interface is available in German and English. Person data from the CSV is always shown as written. Work with new data? Just reload the app! 
 
-h###http://moritzramm.github.io/knowYourLuigi
+### http://moritzramm.github.io/knowYourLuigi
 
 ---
 
