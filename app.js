@@ -37,7 +37,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       themeAria: "Hell-/Dunkelmodus umschalten",
       importTitle: "Daten importieren",
       importLeadBefore:
-        "Wähle zuerst die Fotos, dann die CSV. Im Dateidialog kannst du den Ordner öffnen und alle Bilder markieren. Noch keine Daten? ",
+        "Wähle zuerst die Fotos, dann die CSV. Im Dateidialog kannst du den Ordner öffnen und alle Bilder markieren. Es werden keine Daten hochgeladen — Fotos und CSV bleiben in deinem Browser. Noch keine Daten? ",
       tryThese: "Diese ausprobieren",
       importLeadAfter: ".",
       pickImages: "Bilder wählen",
@@ -83,7 +83,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       themeAria: "Toggle light/dark mode",
       importTitle: "Import data",
       importLeadBefore:
-        "First select the photos, then the CSV. In the file dialog you can open the folder and select all images. No data yet? ",
+        "First select the photos, then the CSV. In the file dialog you can open the folder and select all images. No data is uploaded — photos and CSV stay in your browser. No data yet? ",
       tryThese: "Try these",
       importLeadAfter: ".",
       pickImages: "Choose images",
