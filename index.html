@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light" data-lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Know Your Luigi</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#0a4cf5" />
+    <link rel="stylesheet" href="vendor/fonts/google-fonts.css" />
+    <link rel="stylesheet" href="vendor/daisyui.css" />
+    <script src="vendor/tailwind-browser.js"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="min-h-dvh text-base-content">
+    <div class="playful-bg" aria-hidden="true">
+      <span class="blob blob-a"></span>
+      <span class="blob blob-b"></span>
+      <span class="blob blob-c"></span>
+      <span class="shape shape-star"></span>
+      <span class="shape shape-squiggle"></span>
+      <span class="shape shape-dot"></span>
+    </div>
+
+    <input id="images-input" type="file" accept="image/*" multiple class="sr-only" tabindex="-1" />
+    <input id="csv-input" type="file" accept=".csv,text/csv" class="sr-only" tabindex="-1" />
+
+    <div class="app-shell mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-6 pt-4">
+      <header class="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h1 class="display-title text-3xl font-bold leading-none tracking-tight">
+            Know Your <span class="highlight">Luigi</span>
+          </h1>
+          <p id="progress" class="progress-chip mt-2 is-hidden">– / –</p>
+        </div>
+        <div class="header-actions">
+          <button
+            id="lang-btn"
+            type="button"
+            class="lang-btn"
+            aria-label="Switch to English"
+            title="English"
+          >
+            EN
+          </button>
+          <label class="swap swap-rotate theme-toggle" aria-label="Hell-/Dunkelmodus umschalten">
+            <input id="theme-toggle" type="checkbox" />
+            <svg class="swap-off h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"
+              />
+            </svg>
+            <svg class="swap-on h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"
+              />
+            </svg>
+          </label>
+          <button
+            id="restart-btn"
+            type="button"
+            class="icon-btn icon-btn-primary is-hidden"
+            aria-label="Runde neu starten"
+            title="Neu starten"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <polyline points="3 4 3 9 8 9" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="flex flex-1 flex-col">
+        <div id="error" class="alert alert-error mb-4 hidden" role="alert"></div>
+
+        <section id="import-screen" class="card flashcard import-card">
+          <div class="card-body gap-4">
+            <div>
+              <h2 id="import-title" class="import-title">Daten importieren</h2>
+              <p id="import-lead" class="import-lead"></p>
+            </div>
+
+            <ol class="import-steps">
+              <li class="import-step">
+                <span class="step-badge">1</span>
+                <div class="step-body">
+                  <button id="pick-images-btn" type="button" class="btn btn-primary btn-block btn-lg action-btn">
+                    Bilder wählen
+                  </button>
+                  <p id="images-status" class="step-status">Noch keine Fotos</p>
+                </div>
+              </li>
+              <li class="import-step">
+                <span class="step-badge">2</span>
+                <div class="step-body">
+                  <button id="pick-csv-btn" type="button" class="btn btn-secondary btn-block btn-lg action-btn" disabled>
+                    CSV wählen
+                  </button>
+                  <p id="csv-status" class="step-status">Zuerst Fotos wählen</p>
+                  <p id="import-misses" class="import-misses is-hidden" hidden></p>
+                </div>
+              </li>
+            </ol>
+
+            <button id="start-btn" type="button" class="btn btn-accent btn-block btn-lg action-btn" disabled>
+              Los geht’s
+            </button>
+          </div>
+        </section>
+
+        <article id="game-screen" class="card flashcard is-hidden">
+          <div class="photo-stage">
+            <button id="prev-btn" type="button" class="skip-btn" aria-label="Vorherige Person">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <figure class="photo-wrap">
+              <button id="photo-button" type="button" class="photo-button" aria-label="Informationen aufdecken">
+                <img id="photo" class="photo hidden" alt="Mitarbeiterfoto" />
+                <div id="photo-placeholder" class="photo-placeholder hidden" aria-hidden="true">
+                  <span id="photo-initials" class="text-4xl font-semibold tracking-wide"></span>
+                </div>
+              </button>
+            </figure>
+            <button id="next-btn" type="button" class="skip-btn" aria-label="Nächste Person">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="card-body gap-3">
+            <div class="info-panel">
+              <div id="details" class="details space-y-1 text-center is-masked" aria-hidden="true">
+                <h2 id="name" class="person-name"></h2>
+                <p id="abteilung" class="meta-line"></p>
+                <p id="position" class="meta-line"></p>
+                <p id="gesellschaft" class="meta-line"></p>
+              </div>
+              <p id="hint" class="hint-text">Tippe auf das Foto oder auf „Aufdecken“.</p>
+            </div>
+
+            <div class="card-actions action-slot mt-1">
+              <button id="reveal-btn" type="button" class="btn btn-primary btn-block btn-lg action-btn">
+                Aufdecken
+              </button>
+              <div id="answer-actions" class="answer-actions is-masked" aria-hidden="true">
+                <button id="wrong-btn" type="button" class="btn btn-secondary btn-lg action-btn">Falsch</button>
+                <button id="right-btn" type="button" class="btn btn-accent btn-lg action-btn">Richtig</button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <section id="summary-screen" class="card flashcard summary-card is-hidden" aria-live="polite">
+          <div class="card-body gap-4 text-center">
+            <h2 id="summary-title" class="import-title">Runde geschafft</h2>
+            <p id="summary-text" class="summary-text"></p>
+            <button id="summary-continue-btn" type="button" class="btn btn-accent btn-block btn-lg action-btn">
+              Nächste Runde
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>

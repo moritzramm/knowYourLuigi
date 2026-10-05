@@ -1,0 +1,18 @@
+{
+  "name": "Know Your Luigi",
+  "short_name": "Luigi",
+  "description": "Learn colleague names with flashcards.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff9f2",
+  "theme_color": "#0a4cf5",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
