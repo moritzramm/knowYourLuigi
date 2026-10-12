@@ -259,7 +259,23 @@ body {
 .import-ready-actions {
   display: grid;
   gap: 0.55rem;
-  margin-top: 0.35rem;
+  margin-top: 24px;
+  justify-items: center;
+}
+
+#import-ready #start-btn {
+  width: 6.5rem;
+  height: 6.5rem;
+  min-height: 6.5rem;
+  border-radius: 9999px;
+  padding: 0.6rem;
+  line-height: 1.15;
+  white-space: normal;
+  text-align: center;
+}
+
+#import-ready .restart-import-btn {
+  width: 100%;
 }
 
 .restart-import-btn {
