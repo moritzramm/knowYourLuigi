@@ -87,29 +87,38 @@
               <li class="import-step">
                 <span class="step-badge">1</span>
                 <div class="step-body">
-                  <button id="pick-images-btn" type="button" class="btn btn-primary btn-block btn-lg action-btn">
+                  <button id="load-remote-zip-btn" type="button" class="btn btn-primary btn-block btn-lg action-btn remote-zip-btn">
+                    Vom Server laden
+                  </button>
+                  <p id="remote-status" class="step-status">AES-ZIP vom Server (Passwort im Dialog)</p>
+                </div>
+              </li>
+              <li class="import-step">
+                <span class="step-badge">2</span>
+                <div class="step-body">
+                  <label id="pick-zip-btn" for="zip-input" class="btn btn-neutral btn-block btn-lg action-btn">
+                    ZIP wählen
+                  </label>
+                  <p id="zip-status" class="step-status">Lokales ZIP mit Fotos + CSV (auch AES)</p>
+                </div>
+              </li>
+              <li class="import-step">
+                <span class="step-badge">3</span>
+                <div class="step-body">
+                  <button id="pick-images-btn" type="button" class="btn btn-secondary btn-block btn-lg action-btn">
                     Bilder wählen
                   </button>
                   <p id="images-status" class="step-status">Noch keine Fotos</p>
                 </div>
               </li>
               <li class="import-step">
-                <span class="step-badge">2</span>
+                <span class="step-badge">4</span>
                 <div class="step-body">
                   <button id="pick-csv-btn" type="button" class="btn btn-secondary btn-block btn-lg action-btn" disabled>
                     CSV wählen
                   </button>
                   <p id="csv-status" class="step-status">Zuerst Fotos wählen</p>
                   <p id="import-misses" class="import-misses is-hidden" hidden></p>
-                </div>
-              </li>
-              <li class="import-step">
-                <span class="step-badge">3</span>
-                <div class="step-body">
-                  <label id="pick-zip-btn" for="zip-input" class="btn btn-neutral btn-block btn-lg action-btn">
-                    ZIP wählen
-                  </label>
-                  <p id="zip-status" class="step-status">Optional: ein ZIP mit Fotos + CSV</p>
                 </div>
               </li>
             </ol>
@@ -177,7 +186,36 @@
       </main>
     </div>
 
-    <script src="vendor/jszip.min.js"></script>
-    <script src="app.js?v=zip4" defer></script>
+    <div id="zip-password-modal" class="password-modal is-hidden" hidden>
+      <button type="button" class="password-modal-backdrop" id="zip-password-backdrop" aria-label="Schließen"></button>
+      <div
+        class="password-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="zip-password-modal-title"
+      >
+        <h3 id="zip-password-modal-title" class="password-modal-title">ZIP-Passwort</h3>
+        <p id="zip-password-modal-lead" class="password-modal-lead">
+          Passwort für das verschlüsselte ZIP eingeben.
+        </p>
+        <label class="password-modal-field" for="zip-password-input">
+          <span id="zip-password-label" class="zip-password-label">Passwort</span>
+          <input
+            id="zip-password-input"
+            type="password"
+            autocomplete="current-password"
+            spellcheck="false"
+            placeholder="Passwort"
+          />
+        </label>
+        <div class="password-modal-actions">
+          <button id="zip-password-cancel" type="button" class="btn btn-ghost">Abbrechen</button>
+          <button id="zip-password-confirm" type="button" class="btn btn-primary">Laden</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="vendor/zip.min.js"></script>
+    <script src="app.js?v=aes5" defer></script>
   </body>
 </html>

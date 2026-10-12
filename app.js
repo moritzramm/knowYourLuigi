@@ -3,6 +3,9 @@
   const LANG_KEY = "namen-lernen-lang";
   const REINSERT_MIN = 2;
   const REINSERT_MAX = 5;
+  // Relative URL of an (optionally AES-encrypted) ZIP on the same host as the app.
+  // Leave empty to hide “Load from server”. Decrypted contents never leave the browser.
+  const REMOTE_ZIP_URL = "data/team.zip";
   const DEMO_IMAGE_DIR = "bilder0";
   // Filenames as served on GitHub Pages / most hosts (NFC umlauts, not macOS NFD).
   const DEMO_IMAGE_FILES = [
@@ -37,19 +40,28 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       themeAria: "Hell-/Dunkelmodus umschalten",
       importTitle: "Daten importieren",
       importLeadBefore:
-        "Wähle Fotos und CSV einzeln — oder ein ZIP mit beidem. Es werden keine Daten hochgeladen — Fotos und CSV bleiben in deinem Browser. Noch keine Daten? ",
+        "Server-ZIP, lokales ZIP oder Fotos+CSV — entschlüsselte Daten bleiben nur in deinem Browser. Noch keine Daten? ",
       tryThese: "Diese ausprobieren",
       importLeadAfter: ".",
       pickImages: "Bilder wählen",
       pickCsv: "CSV wählen",
       pickZip: "ZIP wählen (Bilder + CSV)",
+      zipPasswordLabel: "Passwort",
+      zipPasswordPlaceholder: "ZIP-Passwort",
+      zipPasswordTitle: "ZIP-Passwort",
+      zipPasswordLead: "Passwort für das verschlüsselte ZIP eingeben. Leer lassen, falls unverschlüsselt.",
+      zipPasswordCancel: "Abbrechen",
+      zipPasswordConfirm: "Laden",
+      loadRemoteZip: "Vom Server laden",
+      zipLoading: "ZIP wird geladen…",
+      remoteHint: "AES-ZIP vom Server (Passwort im Dialog)",
       start: "Los geht’s",
       noPhotos: "Noch keine Fotos",
       pickPhotosFirst: "Zuerst Fotos wählen",
       csvNotChosen: "CSV noch nicht gewählt",
       filesSkipped: "Nicht nötig – ZIP geladen",
-      zipHint: "Optional: ein ZIP mit Fotos + CSV",
-      zipSkipped: "Nicht nötig – Fotos bereits gewählt",
+      zipHint: "Lokales ZIP mit Fotos + CSV (auch AES)",
+      zipSkipped: "Nicht nötig – andere Quelle gewählt",
       zipLoaded: (photos, people) => `ZIP geladen · ${photos} Fotos · ${people} Personen`,
       noImagesDetected: "Keine Bilder erkannt",
       photosLoaded: (n) => `${n} Foto${n === 1 ? "" : "s"} geladen`,
@@ -70,7 +82,14 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       errZipGeneric: "ZIP konnte nicht gelesen werden.",
       errZipNoCsv: "Im ZIP wurde keine CSV-Datei gefunden.",
       errZipNoImages: "Im ZIP wurden keine Bilder gefunden.",
-      errZipMissing: "JSZip konnte nicht geladen werden.",
+      errZipMissing: "zip.js konnte nicht geladen werden.",
+      errZipNeedPassword: "Dieses ZIP ist verschlüsselt — bitte Passwort eingeben.",
+      errZipBadPassword: "Falsches ZIP-Passwort.",
+      errZipRemote: "ZIP vom Server konnte nicht geladen werden.",
+      errZipRemoteMissing: "Auf dem Server liegt noch keine ZIP-Datei.",
+      errZipRemoteFile:
+        "Vom Server laden funktioniert nicht per Doppelklick (file://). Bitte „ZIP wählen“ nutzen oder die App über http://127.0.0.1:8080 öffnen (python3 -m http.server 8080).",
+      remoteHintFile: "Lokal per file://: bitte ZIP wählen oder HTTP-Server nutzen",
       prevAria: "Vorherige Person",
       nextAria: "Nächste Person",
       photoRevealAria: "Informationen aufdecken",
@@ -92,19 +111,28 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       themeAria: "Toggle light/dark mode",
       importTitle: "Import data",
       importLeadBefore:
-        "Choose photos and CSV separately — or one ZIP with both. No data is uploaded — photos and CSV stay in your browser. No data yet? ",
+        "Server ZIP, local ZIP, or photos+CSV — decrypted data stays in your browser only. No data yet? ",
       tryThese: "Try these",
       importLeadAfter: ".",
       pickImages: "Choose images",
       pickCsv: "Choose CSV",
       pickZip: "Choose ZIP (photos + CSV)",
+      zipPasswordLabel: "Password",
+      zipPasswordPlaceholder: "ZIP password",
+      zipPasswordTitle: "ZIP password",
+      zipPasswordLead: "Enter the password for the encrypted ZIP. Leave empty if it is not encrypted.",
+      zipPasswordCancel: "Cancel",
+      zipPasswordConfirm: "Load",
+      loadRemoteZip: "Load from server",
+      zipLoading: "Loading ZIP…",
+      remoteHint: "AES ZIP from server (password in dialog)",
       start: "Let’s go",
       noPhotos: "No photos yet",
       pickPhotosFirst: "Choose photos first",
       csvNotChosen: "CSV not chosen yet",
       filesSkipped: "Not needed – ZIP loaded",
-      zipHint: "Optional: one ZIP with photos + CSV",
-      zipSkipped: "Not needed – photos already chosen",
+      zipHint: "Local ZIP with photos + CSV (AES OK)",
+      zipSkipped: "Not needed – another source chosen",
       zipLoaded: (photos, people) => `ZIP loaded · ${photos} photos · ${people} people`,
       noImagesDetected: "No images detected",
       photosLoaded: (n) => `${n} photo${n === 1 ? "" : "s"} loaded`,
@@ -125,7 +153,14 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       errZipGeneric: "Could not read the ZIP file.",
       errZipNoCsv: "No CSV file was found in the ZIP.",
       errZipNoImages: "No images were found in the ZIP.",
-      errZipMissing: "JSZip failed to load.",
+      errZipMissing: "zip.js could not be loaded.",
+      errZipNeedPassword: "This ZIP is encrypted — please enter the password.",
+      errZipBadPassword: "Wrong ZIP password.",
+      errZipRemote: "Could not load the ZIP from the server.",
+      errZipRemoteMissing: "No ZIP file is available on the server yet.",
+      errZipRemoteFile:
+        "Load from server does not work via double-click (file://). Use “Choose ZIP”, or open the app at http://127.0.0.1:8080 (python3 -m http.server 8080).",
+      remoteHintFile: "On file://: use Choose ZIP or an HTTP server",
       prevAria: "Previous person",
       nextAria: "Next person",
       photoRevealAria: "Reveal information",
@@ -157,6 +192,16 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     pickImagesBtn: document.getElementById("pick-images-btn"),
     pickCsvBtn: document.getElementById("pick-csv-btn"),
     pickZipBtn: document.getElementById("pick-zip-btn"),
+    loadRemoteZipBtn: document.getElementById("load-remote-zip-btn"),
+    remoteStatus: document.getElementById("remote-status"),
+    zipPasswordModal: document.getElementById("zip-password-modal"),
+    zipPasswordBackdrop: document.getElementById("zip-password-backdrop"),
+    zipPasswordTitle: document.getElementById("zip-password-modal-title"),
+    zipPasswordLead: document.getElementById("zip-password-modal-lead"),
+    zipPasswordLabel: document.getElementById("zip-password-label"),
+    zipPasswordInput: document.getElementById("zip-password-input"),
+    zipPasswordCancel: document.getElementById("zip-password-cancel"),
+    zipPasswordConfirm: document.getElementById("zip-password-confirm"),
     startBtn: document.getElementById("start-btn"),
     imagesStatus: document.getElementById("images-status"),
     csvStatus: document.getElementById("csv-status"),
@@ -209,9 +254,14 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   let csvPeopleCount = 0;
   let csvMatchedCount = 0;
   let zipStatusKey = "zipHint";
+  let remoteStatusKey = "remoteHint";
   let zipPhotoCount = 0;
   let zipPeopleCount = 0;
   let errorKey = "";
+  /** @type {null | "remote" | "local"} */
+  let passwordModalMode = null;
+  /** @type {Blob | File | null} */
+  let pendingLocalZip = null;
 
   function t() {
     return I18N[lang];
@@ -227,6 +277,18 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       .split("/")
       .map((segment) => encodeURIComponent(segment))
       .join("/");
+  }
+
+  function isFileProtocol() {
+    return location.protocol === "file:";
+  }
+
+  function remoteZipFetchUrl() {
+    try {
+      return new URL(REMOTE_ZIP_URL, document.baseURI || location.href).href;
+    } catch (_) {
+      return assetUrl(REMOTE_ZIP_URL);
+    }
   }
 
   function renderImportLead() {
@@ -287,11 +349,18 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   function updateImportAvailability() {
     const filesInactive = isFilesPathInactive();
     const zipInactive = isZipInactive();
+    const zipBusy = zipStatusKey === "zipLoading" || remoteStatusKey === "zipLoading";
     const csvEnabled = !filesInactive && imagesStatusKey === "photosLoaded";
+    const hasRemote = Boolean(REMOTE_ZIP_URL);
 
     setControlInactive(els.pickImagesBtn, els.imagesInput, filesInactive);
     setControlInactive(els.pickCsvBtn, els.csvInput, !csvEnabled);
-    setControlInactive(els.pickZipBtn, els.zipInput, zipInactive);
+    setControlInactive(els.pickZipBtn, els.zipInput, zipInactive || zipBusy);
+
+    if (els.loadRemoteZipBtn) {
+      els.loadRemoteZipBtn.classList.toggle("is-hidden", !hasRemote);
+      setControlInactive(els.loadRemoteZipBtn, null, zipInactive || zipBusy || !hasRemote);
+    }
   }
 
   function refreshStatusTexts() {
@@ -314,9 +383,23 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       els.csvStatus.textContent = s[csvStatusKey] || s.pickPhotosFirst;
     }
 
+    if (els.remoteStatus) {
+      if (remoteStatusKey === "zipLoaded") {
+        els.remoteStatus.textContent = s.zipLoaded(zipPhotoCount, zipPeopleCount);
+      } else if (remoteStatusKey === "zipLoading") {
+        els.remoteStatus.textContent = s.zipLoading;
+      } else if (zipStatusKey === "zipLoaded" || isZipInactive()) {
+        els.remoteStatus.textContent = s.zipSkipped;
+      } else if (remoteStatusKey === "remoteHint" && isFileProtocol()) {
+        els.remoteStatus.textContent = s.remoteHintFile;
+      } else {
+        els.remoteStatus.textContent = s[remoteStatusKey] || s.remoteHint;
+      }
+    }
+
     if (zipStatusKey === "zipLoaded") {
       els.zipStatus.textContent = s.zipLoaded(zipPhotoCount, zipPeopleCount);
-    } else if (isZipInactive()) {
+    } else if (remoteStatusKey === "zipLoaded" || isZipInactive()) {
       els.zipStatus.textContent = s.zipSkipped;
     } else {
       els.zipStatus.textContent = s[zipStatusKey] || s.zipHint;
@@ -360,6 +443,14 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     els.pickImagesBtn.textContent = s.pickImages;
     els.pickCsvBtn.textContent = s.pickCsv;
     els.pickZipBtn.textContent = s.pickZip;
+    if (els.loadRemoteZipBtn) els.loadRemoteZipBtn.textContent = s.loadRemoteZip;
+    if (els.zipPasswordTitle) els.zipPasswordTitle.textContent = s.zipPasswordTitle;
+    if (els.zipPasswordLead) els.zipPasswordLead.textContent = s.zipPasswordLead;
+    if (els.zipPasswordLabel) els.zipPasswordLabel.textContent = s.zipPasswordLabel;
+    if (els.zipPasswordInput) els.zipPasswordInput.placeholder = s.zipPasswordPlaceholder;
+    if (els.zipPasswordCancel) els.zipPasswordCancel.textContent = s.zipPasswordCancel;
+    if (els.zipPasswordConfirm) els.zipPasswordConfirm.textContent = s.zipPasswordConfirm;
+    if (els.zipPasswordBackdrop) els.zipPasswordBackdrop.setAttribute("aria-label", s.zipPasswordCancel);
     els.startBtn.textContent = s.start;
 
     els.prevBtn.setAttribute("aria-label", s.prevAria);
@@ -422,8 +513,33 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   }
 
   function normalizeKey(name) {
-    // NFC: macOS File API often returns NFD names (ö = o + ¨), CSV usually NFC.
+    // NFC: macOS File API / ZIPs often use NFD (ö = o + ¨), CSV usually NFC.
     return basename(name).trim().toLowerCase().normalize("NFC");
+  }
+
+  function rawZipFilenameBytes(entry) {
+    const raw = entry && entry.rawFilename;
+    if (!raw) return null;
+    if (raw instanceof Uint8Array) return raw;
+    if (ArrayBuffer.isView(raw)) {
+      return new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength);
+    }
+    if (raw instanceof ArrayBuffer) return new Uint8Array(raw);
+    return null;
+  }
+
+  /** Many macOS ZIPs store UTF-8 names without the UTF-8 flag; zip.js then uses CP437. */
+  function decodeZipFilename(entry) {
+    const bytes = rawZipFilenameBytes(entry);
+    if (bytes && bytes.length) {
+      try {
+        const utf8 = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+        if (utf8) return utf8.normalize("NFC");
+      } catch (_) {
+        /* not valid UTF-8 — fall back to zip.js decoded name */
+      }
+    }
+    return String((entry && entry.filename) || "").normalize("NFC");
   }
 
   function parseCsv(text) {
@@ -787,6 +903,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     els.zipInput.value = "";
     csvStatusKey = "csvNotChosen";
     zipStatusKey = "zipHint";
+    remoteStatusKey = "remoteHint";
 
     const files = Array.from(fileList || []).filter(
       (file) => file.type.startsWith("image/") || /\.(jpe?g|png|webp|gif)$/i.test(file.name)
@@ -847,14 +964,54 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     }
   }
 
-  async function handleZipSelected(file) {
-    clearError();
-    if (!file) return;
+  function zipErrorKey(err) {
+    const msg = String((err && (err.message || err)) || "");
+    if (/ERR_INVALID_PASSWORD|Invalid password/i.test(msg)) return "errZipBadPassword";
+    if (/ERR_ENCRYPTED|encrypted/i.test(msg)) return "errZipNeedPassword";
+    return "errZipGeneric";
+  }
 
-    if (typeof JSZip === "undefined") {
+  function ensureZipLib() {
+    if (typeof zip === "undefined" || !zip.ZipReader) {
       showError("errZipMissing");
-      return;
+      return false;
     }
+    if (typeof zip.configure === "function") {
+      zip.configure({ useWebWorkers: false });
+    }
+    return true;
+  }
+
+  function openPasswordModal(mode) {
+    passwordModalMode = mode;
+    if (!els.zipPasswordModal || !els.zipPasswordInput) return;
+    els.zipPasswordInput.value = "";
+    els.zipPasswordModal.hidden = false;
+    els.zipPasswordModal.classList.remove("is-hidden");
+    requestAnimationFrame(() => els.zipPasswordInput.focus());
+  }
+
+  function closePasswordModal() {
+    passwordModalMode = null;
+    pendingLocalZip = null;
+    if (!els.zipPasswordModal) return;
+    els.zipPasswordModal.classList.add("is-hidden");
+    els.zipPasswordModal.hidden = true;
+    if (els.zipPasswordInput) els.zipPasswordInput.value = "";
+  }
+
+  function markZipSource(source) {
+    if (source === "remote") {
+      remoteStatusKey = "zipLoaded";
+      zipStatusKey = "zipHint";
+    } else {
+      zipStatusKey = "zipLoaded";
+      remoteStatusKey = "remoteHint";
+    }
+  }
+
+  async function importZipFromBlob(blob, password, source) {
+    if (!ensureZipLib()) return false;
 
     resetImportBuffers();
     els.imagesInput.value = "";
@@ -862,34 +1019,46 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     imagesStatusKey = "noPhotos";
     csvStatusKey = "pickPhotosFirst";
     zipStatusKey = "zipHint";
+    remoteStatusKey = "remoteHint";
     refreshStatusTexts();
 
+    const reader = new zip.ZipReader(new zip.BlobReader(blob), {
+      password: password || undefined,
+    });
+
     try {
-      const zip = await JSZip.loadAsync(file);
-      /** @type {{ path: string, entry: JSZip.JSZipObject, depth: number, base: string }[]} */
+      const entries = await reader.getEntries();
+      /** @type {{ path: string, entry: object, depth: number, base: string }[]} */
       const csvCandidates = [];
-      /** @type {{ path: string, entry: JSZip.JSZipObject, base: string }[]} */
+      /** @type {{ path: string, entry: object, base: string }[]} */
       const imageEntries = [];
 
-      zip.forEach((relativePath, entry) => {
-        if (entry.dir || isIgnoredZipPath(relativePath)) return;
-        const base = basename(relativePath);
-        const depth = relativePath.replace(/\\/g, "/").split("/").filter(Boolean).length;
+      for (const entry of entries) {
+        const path = decodeZipFilename(entry);
+        if (entry.directory || isIgnoredZipPath(path)) continue;
+        const base = basename(path);
+        const depth = path.replace(/\\/g, "/").split("/").filter(Boolean).length;
+
+        if (entry.encrypted && !password) {
+          showError("errZipNeedPassword");
+          refreshStatusTexts();
+          return "need-password";
+        }
 
         if (/\.csv$/i.test(base)) {
-          csvCandidates.push({ path: relativePath, entry, depth, base });
-          return;
+          csvCandidates.push({ path, entry, depth, base });
+          continue;
         }
 
         if (/\.(jpe?g|png|webp|gif)$/i.test(base)) {
-          imageEntries.push({ path: relativePath, entry, base });
+          imageEntries.push({ path, entry, base });
         }
-      });
+      }
 
       if (csvCandidates.length === 0) {
         showError("errZipNoCsv");
         refreshStatusTexts();
-        return;
+        return false;
       }
 
       csvCandidates.sort((a, b) => {
@@ -899,41 +1068,131 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
         return a.depth - b.depth || a.path.localeCompare(b.path);
       });
 
-      const csvText = await csvCandidates[0].entry.async("string");
+      const readOpts = password ? { password } : {};
+      const csvText = await csvCandidates[0].entry.getData(new zip.TextWriter("utf-8"), readOpts);
       const rows = parseCsv(csvText);
       if (rows.length === 0) {
         showError("errNoPeople");
         refreshStatusTexts();
-        return;
+        return false;
       }
 
       for (const item of imageEntries) {
         const key = normalizeKey(item.base);
         if (!key || photoUrls.has(key)) continue;
-        const bytes = await item.entry.async("uint8array");
-        const blob = new Blob([bytes], { type: mimeFromName(item.base) });
-        photoUrls.set(key, URL.createObjectURL(blob));
+        const imageBlob = await item.entry.getData(new zip.BlobWriter(mimeFromName(item.base)), readOpts);
+        photoUrls.set(key, URL.createObjectURL(imageBlob));
       }
 
       if (photoUrls.size === 0) {
         showError("errZipNoImages");
         refreshStatusTexts();
-        return;
+        return false;
       }
 
       imagesStatusKey = "photosLoaded";
       imagesCount = photoUrls.size;
       zipPhotoCount = photoUrls.size;
       zipPeopleCount = rows.length;
-      zipStatusKey = "zipLoaded";
+      markZipSource(source === "remote" ? "remote" : "local");
       setCsvImportResult(rows);
+      return true;
     } catch (err) {
       resetImportBuffers();
       imagesStatusKey = "noPhotos";
       csvStatusKey = "pickPhotosFirst";
       zipStatusKey = "zipHint";
+      remoteStatusKey = "remoteHint";
       refreshStatusTexts();
-      showError("errZipGeneric");
+      const key = zipErrorKey(err);
+      showError(key);
+      return key === "errZipNeedPassword" || key === "errZipBadPassword" ? key : false;
+    } finally {
+      try {
+        await reader.close();
+      } catch (_) {
+        /* ignore */
+      }
+    }
+  }
+
+  async function handleZipSelected(file) {
+    clearError();
+    if (!file) return;
+    const result = await importZipFromBlob(file, "", "local");
+    if (result === "need-password" || result === "errZipNeedPassword") {
+      pendingLocalZip = file;
+      openPasswordModal("local");
+    }
+  }
+
+  function requestRemoteZip() {
+    clearError();
+    if (!REMOTE_ZIP_URL || isZipInactive()) return;
+    if (isFileProtocol()) {
+      remoteStatusKey = "remoteHint";
+      refreshStatusTexts();
+      showError("errZipRemoteFile");
+      return;
+    }
+    openPasswordModal("remote");
+  }
+
+  async function loadRemoteZipWithPassword(password) {
+    clearError();
+    if (!REMOTE_ZIP_URL || isZipInactive()) return;
+
+    if (isFileProtocol()) {
+      remoteStatusKey = "remoteHint";
+      refreshStatusTexts();
+      showError("errZipRemoteFile");
+      return;
+    }
+
+    remoteStatusKey = "zipLoading";
+    refreshStatusTexts();
+
+    try {
+      const response = await fetch(remoteZipFetchUrl(), { cache: "no-store" });
+      if (response.status === 404) {
+        remoteStatusKey = "remoteHint";
+        refreshStatusTexts();
+        showError("errZipRemoteMissing");
+        return;
+      }
+      if (!response.ok) {
+        remoteStatusKey = "remoteHint";
+        refreshStatusTexts();
+        showError("errZipRemote");
+        return;
+      }
+      const blob = await response.blob();
+      const result = await importZipFromBlob(blob, password, "remote");
+      if (result === "need-password" || result === "errZipNeedPassword" || result === "errZipBadPassword") {
+        openPasswordModal("remote");
+      }
+    } catch (err) {
+      remoteStatusKey = "remoteHint";
+      refreshStatusTexts();
+      showError(isFileProtocol() ? "errZipRemoteFile" : "errZipRemote");
+    }
+  }
+
+  async function confirmPasswordModal() {
+    const password = (els.zipPasswordInput && els.zipPasswordInput.value) || "";
+    const mode = passwordModalMode;
+    const localFile = pendingLocalZip;
+    closePasswordModal();
+    if (mode === "remote") {
+      await loadRemoteZipWithPassword(password);
+      return;
+    }
+    if (mode === "local" && localFile) {
+      const result = await importZipFromBlob(localFile, password, "local");
+      if (result === "need-password" || result === "errZipNeedPassword" || result === "errZipBadPassword") {
+        pendingLocalZip = localFile;
+        openPasswordModal("local");
+      }
     }
   }
 
@@ -958,6 +1217,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     els.csvInput.value = "";
     els.zipInput.value = "";
     zipStatusKey = "zipHint";
+    remoteStatusKey = "remoteHint";
     zipPhotoCount = 0;
     zipPeopleCount = 0;
     els.startBtn.disabled = true;
@@ -1025,6 +1285,33 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       const file = els.zipInput.files && els.zipInput.files[0];
       handleZipSelected(file);
     });
+    if (els.loadRemoteZipBtn) {
+      els.loadRemoteZipBtn.addEventListener("click", () => {
+        if (!els.loadRemoteZipBtn.disabled) requestRemoteZip();
+      });
+    }
+    if (els.zipPasswordConfirm) {
+      els.zipPasswordConfirm.addEventListener("click", () => {
+        confirmPasswordModal();
+      });
+    }
+    if (els.zipPasswordCancel) {
+      els.zipPasswordCancel.addEventListener("click", () => closePasswordModal());
+    }
+    if (els.zipPasswordBackdrop) {
+      els.zipPasswordBackdrop.addEventListener("click", () => closePasswordModal());
+    }
+    if (els.zipPasswordInput) {
+      els.zipPasswordInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          confirmPasswordModal();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          closePasswordModal();
+        }
+      });
+    }
     els.startBtn.addEventListener("click", startGame);
     els.restartBtn.addEventListener("click", restartGame);
     els.summaryContinueBtn.addEventListener("click", continueAfterSummary);

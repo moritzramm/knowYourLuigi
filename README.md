@@ -29,9 +29,18 @@ Keep the whole project folder together.
 
 On the first screen:
 
-1. Tap **Bilder wählen** / **Choose images** and select all photo files (open the folder → Select All).
-2. Tap **CSV wählen** / **Choose CSV** and pick your people file.
-3. Tap **Los geht’s** / **Let’s go**.
+1. **Vom Server laden** / **Load from server** — fetches `data/team.zip`; enter the password in the dialog (leave empty if unencrypted).
+2. **Or** **ZIP wählen** / **Choose ZIP** — pick a local ZIP (AES password dialog if needed).
+3. **Or** **Bilder wählen** + **CSV wählen** — select photos and CSV separately.
+4. Tap **Los geht’s** / **Let’s go**.
+
+**Local tip:** Opening `index.html` via double-click (`file://`) cannot use **Load from server**. Use **ZIP wählen**, or run:
+
+```bash
+python3 -m http.server 8080
+```
+
+and open `http://127.0.0.1:8080`.
 
 **No data yet?** Click **Diese ausprobieren** / **Try these** under the intro text to load the built-in demo set and start playing right away.
 
@@ -41,6 +50,17 @@ On the first screen:
 - If a name has no matching photo, it still appears with initials. The import screen lists who is missing a photo.
 - To use a **different** set of people later, refresh the page and import again.
 - The blue **restart** button only reshuffles the **current** set — it does not load new files.
+
+### AES-encrypted ZIP (macOS)
+
+Finder “Compress” does **not** add a password. Use 7-Zip (AES-256):
+
+```bash
+brew install p7zip
+7z a -tzip -mem=AES256 -p'YourPassword' team.zip fotos/ personen.csv
+```
+
+Put `team.zip` in `data/` for Pages, or share the file and use **ZIP wählen**. Do not commit unencrypted colleague photos to a public repo. Enter the password only in the app — never put it in the source code. A shared password is a barrier, not strong access control (offline guessing is still possible).
 
 ### 3. Play a round
 
@@ -97,6 +117,8 @@ Extra columns (if any) are ignored.
 
 Upload the full folder, including `vendor/` and `bilder0/`. Visitors import their own photos/CSV in the browser; those files are not sent to GitHub. Only what you commit (e.g. the demo photos) is public — do not commit private portraits unless that is intentional.
 
+To offer a shared encrypted package on Pages, place an AES ZIP at `data/team.zip` (`team.zip` is gitignored by default) or change `REMOTE_ZIP_URL` in `app.js`. Users still need the password; decrypted files stay in the browser.
+
 ---
 
 ## Folder overview
@@ -105,6 +127,8 @@ Upload the full folder, including `vendor/` and `bilder0/`. Visitors import thei
 |------|------|
 | `index.html`, `app.js`, `style.css` | App |
 | `vendor/` | Styles, script, fonts (works offline / without CDN) |
+| `vendor/zip.min.js` | ZIP + AES decrypt (zip.js) |
+| `data/` | Optional `team.zip` for “Load from server” (ignored by git) |
 | `bilder0/` | Demo photos |
 | `personen0.csv` | Demo CSV (also embedded for `file://`) |
 | `favicon.svg`, `manifest.webmanifest` | Icon and home-screen install |
