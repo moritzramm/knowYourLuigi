@@ -233,6 +233,9 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   let people = [];
   /** @type {typeof people} */
   let queue = [];
+  /** Keys of cards left via Next — Prev restores them in reverse order. */
+  /** @type {string[]} */
+  let navHistory = [];
   /** @type {Set<string>} */
   let requeuedKeys = new Set();
   /** @type {Set<string>} */
@@ -744,13 +747,22 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     updateSkipButtons();
   }
 
+  function historyHasRestorableCard() {
+    for (let i = navHistory.length - 1; i >= 0; i -= 1) {
+      const key = navHistory[i];
+      if (queue.some((person) => personKey(person) === key)) return true;
+    }
+    return false;
+  }
+
   function updateSkipButtons() {
-    els.prevBtn.disabled = queue.length <= 1;
+    els.prevBtn.disabled = !historyHasRestorableCard();
     els.nextBtn.disabled = queue.length <= 1;
   }
 
   function startRound(source = people) {
     queue = shuffle(source);
+    navHistory = [];
     requeuedKeys = new Set();
     wrongThisRound = new Set();
     firstTryCount = 0;
@@ -809,13 +821,26 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   }
 
   function skipPrev() {
-    if (!isGameActive() || queue.length <= 1) return;
-    queue.unshift(queue.pop());
-    renderCard();
+    if (!isGameActive()) return;
+
+    while (navHistory.length > 0) {
+      const key = navHistory.pop();
+      const idx = queue.findIndex((person) => personKey(person) === key);
+      if (idx === -1) continue;
+      if (idx === 0) {
+        renderCard();
+        return;
+      }
+      const [person] = queue.splice(idx, 1);
+      queue.unshift(person);
+      renderCard();
+      return;
+    }
   }
 
   function skipNext() {
     if (!isGameActive() || queue.length <= 1) return;
+    navHistory.push(personKey(queue[0]));
     queue.push(queue.shift());
     renderCard();
   }
