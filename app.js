@@ -41,7 +41,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       importTitle: "Daten importieren",
       importReadyTitle: "Daten geladen",
       importLeadBefore:
-        "Server-ZIP, lokales ZIP oder Fotos+CSV — entschlüsselte Daten bleiben nur in deinem Browser. Noch keine Daten? ",
+        "Server-ZIP, lokales ZIP oder Fotos+CSV - entschlüsselte Daten bleiben nur in deinem Browser. Noch keine Daten? ",
       tryThese: "Diese ausprobieren",
       importLeadAfter: ".",
       importReadyZip: (photos, people) => `ZIP geladen · ${photos} Fotos · ${people} Personen`,
@@ -117,7 +117,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       importTitle: "Import data",
       importReadyTitle: "Data loaded",
       importLeadBefore:
-        "Server ZIP, local ZIP, or photos+CSV — decrypted data stays in your browser only. No data yet? ",
+        "Server ZIP, local ZIP, or photos+CSV - decrypted data stays in your browser only. No data yet? ",
       tryThese: "Try these",
       importLeadAfter: ".",
       importReadyZip: (photos, people) => `ZIP loaded · ${photos} photos · ${people} people`,
