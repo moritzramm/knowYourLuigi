@@ -256,11 +256,19 @@ body {
 }
 
 #import-screen .btn:disabled,
+#import-screen .btn.is-inactive,
 #start-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+  pointer-events: none;
+}
+
+#pick-zip-btn {
+  background: var(--yellow);
+  color: #17182a;
+  cursor: pointer;
 }
 
 /* Decorative background */

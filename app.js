@@ -37,15 +37,20 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       themeAria: "Hell-/Dunkelmodus umschalten",
       importTitle: "Daten importieren",
       importLeadBefore:
-        "Wähle zuerst die Fotos, dann die CSV. Im Dateidialog kannst du den Ordner öffnen und alle Bilder markieren. Es werden keine Daten hochgeladen — Fotos und CSV bleiben in deinem Browser. Noch keine Daten? ",
+        "Wähle Fotos und CSV einzeln — oder ein ZIP mit beidem. Es werden keine Daten hochgeladen — Fotos und CSV bleiben in deinem Browser. Noch keine Daten? ",
       tryThese: "Diese ausprobieren",
       importLeadAfter: ".",
       pickImages: "Bilder wählen",
       pickCsv: "CSV wählen",
+      pickZip: "ZIP wählen (Bilder + CSV)",
       start: "Los geht’s",
       noPhotos: "Noch keine Fotos",
       pickPhotosFirst: "Zuerst Fotos wählen",
       csvNotChosen: "CSV noch nicht gewählt",
+      filesSkipped: "Nicht nötig – ZIP geladen",
+      zipHint: "Optional: ein ZIP mit Fotos + CSV",
+      zipSkipped: "Nicht nötig – Fotos bereits gewählt",
+      zipLoaded: (photos, people) => `ZIP geladen · ${photos} Fotos · ${people} Personen`,
       noImagesDetected: "Keine Bilder erkannt",
       photosLoaded: (n) => `${n} Foto${n === 1 ? "" : "s"} geladen`,
       noPeopleFound: "Keine Personen gefunden",
@@ -62,6 +67,10 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       errNeedBoth: "Bitte zuerst Bilder und CSV wählen.",
       errCsvGeneric: "CSV konnte nicht gelesen werden.",
       errDemoLoad: "Demo-Daten konnten nicht geladen werden.",
+      errZipGeneric: "ZIP konnte nicht gelesen werden.",
+      errZipNoCsv: "Im ZIP wurde keine CSV-Datei gefunden.",
+      errZipNoImages: "Im ZIP wurden keine Bilder gefunden.",
+      errZipMissing: "JSZip konnte nicht geladen werden.",
       prevAria: "Vorherige Person",
       nextAria: "Nächste Person",
       photoRevealAria: "Informationen aufdecken",
@@ -83,15 +92,20 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       themeAria: "Toggle light/dark mode",
       importTitle: "Import data",
       importLeadBefore:
-        "First select the photos, then the CSV. In the file dialog you can open the folder and select all images. No data is uploaded — photos and CSV stay in your browser. No data yet? ",
+        "Choose photos and CSV separately — or one ZIP with both. No data is uploaded — photos and CSV stay in your browser. No data yet? ",
       tryThese: "Try these",
       importLeadAfter: ".",
       pickImages: "Choose images",
       pickCsv: "Choose CSV",
+      pickZip: "Choose ZIP (photos + CSV)",
       start: "Let’s go",
       noPhotos: "No photos yet",
       pickPhotosFirst: "Choose photos first",
       csvNotChosen: "CSV not chosen yet",
+      filesSkipped: "Not needed – ZIP loaded",
+      zipHint: "Optional: one ZIP with photos + CSV",
+      zipSkipped: "Not needed – photos already chosen",
+      zipLoaded: (photos, people) => `ZIP loaded · ${photos} photos · ${people} people`,
       noImagesDetected: "No images detected",
       photosLoaded: (n) => `${n} photo${n === 1 ? "" : "s"} loaded`,
       noPeopleFound: "No people found",
@@ -108,6 +122,10 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       errNeedBoth: "Please choose images and a CSV first.",
       errCsvGeneric: "Could not read the CSV.",
       errDemoLoad: "Could not load demo data.",
+      errZipGeneric: "Could not read the ZIP file.",
+      errZipNoCsv: "No CSV file was found in the ZIP.",
+      errZipNoImages: "No images were found in the ZIP.",
+      errZipMissing: "JSZip failed to load.",
       prevAria: "Previous person",
       nextAria: "Next person",
       photoRevealAria: "Reveal information",
@@ -135,11 +153,14 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     importLead: document.getElementById("import-lead"),
     imagesInput: document.getElementById("images-input"),
     csvInput: document.getElementById("csv-input"),
+    zipInput: document.getElementById("zip-input"),
     pickImagesBtn: document.getElementById("pick-images-btn"),
     pickCsvBtn: document.getElementById("pick-csv-btn"),
+    pickZipBtn: document.getElementById("pick-zip-btn"),
     startBtn: document.getElementById("start-btn"),
     imagesStatus: document.getElementById("images-status"),
     csvStatus: document.getElementById("csv-status"),
+    zipStatus: document.getElementById("zip-status"),
     importMisses: document.getElementById("import-misses"),
     summaryScreen: document.getElementById("summary-screen"),
     summaryTitle: document.getElementById("summary-title"),
@@ -187,6 +208,9 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   let csvStatusKey = "pickPhotosFirst";
   let csvPeopleCount = 0;
   let csvMatchedCount = 0;
+  let zipStatusKey = "zipHint";
+  let zipPhotoCount = 0;
+  let zipPeopleCount = 0;
   let errorKey = "";
 
   function t() {
@@ -240,21 +264,65 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     applyTheme(prefersDark ? "dark" : "light");
   }
 
+  function isZipInactive() {
+    return imagesStatusKey === "photosLoaded" && zipStatusKey !== "zipLoaded";
+  }
+
+  function isFilesPathInactive() {
+    return zipStatusKey === "zipLoaded";
+  }
+
+  function setControlInactive(btn, input, inactive) {
+    if (input) input.disabled = inactive;
+    if (!btn) return;
+    btn.disabled = inactive;
+    btn.classList.toggle("is-inactive", inactive);
+    btn.setAttribute("aria-disabled", inactive ? "true" : "false");
+    if (btn.tagName === "LABEL") {
+      if (inactive) btn.removeAttribute("for");
+      else if (input && input.id) btn.setAttribute("for", input.id);
+    }
+  }
+
+  function updateImportAvailability() {
+    const filesInactive = isFilesPathInactive();
+    const zipInactive = isZipInactive();
+    const csvEnabled = !filesInactive && imagesStatusKey === "photosLoaded";
+
+    setControlInactive(els.pickImagesBtn, els.imagesInput, filesInactive);
+    setControlInactive(els.pickCsvBtn, els.csvInput, !csvEnabled);
+    setControlInactive(els.pickZipBtn, els.zipInput, zipInactive);
+  }
+
   function refreshStatusTexts() {
     const s = t();
+    const filesInactive = isFilesPathInactive();
 
-    if (imagesStatusKey === "photosLoaded") {
+    if (filesInactive) {
+      els.imagesStatus.textContent = s.filesSkipped;
+    } else if (imagesStatusKey === "photosLoaded") {
       els.imagesStatus.textContent = s.photosLoaded(imagesCount);
     } else {
       els.imagesStatus.textContent = s[imagesStatusKey] || s.noPhotos;
     }
 
-    if (csvStatusKey === "csvLoaded") {
+    if (filesInactive) {
+      els.csvStatus.textContent = s.filesSkipped;
+    } else if (csvStatusKey === "csvLoaded") {
       els.csvStatus.textContent = s.csvLoaded(csvPeopleCount, csvMatchedCount);
     } else {
       els.csvStatus.textContent = s[csvStatusKey] || s.pickPhotosFirst;
     }
 
+    if (zipStatusKey === "zipLoaded") {
+      els.zipStatus.textContent = s.zipLoaded(zipPhotoCount, zipPeopleCount);
+    } else if (isZipInactive()) {
+      els.zipStatus.textContent = s.zipSkipped;
+    } else {
+      els.zipStatus.textContent = s[zipStatusKey] || s.zipHint;
+    }
+
+    updateImportAvailability();
     renderUnmatchedList();
 
     if (summaryVisible) {
@@ -291,6 +359,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     renderImportLead();
     els.pickImagesBtn.textContent = s.pickImages;
     els.pickCsvBtn.textContent = s.pickCsv;
+    els.pickZipBtn.textContent = s.pickZip;
     els.startBtn.textContent = s.start;
 
     els.prevBtn.setAttribute("aria-label", s.prevAria);
@@ -680,17 +749,44 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     }
   }
 
-  function handleImagesSelected(fileList) {
-    clearError();
+  function mimeFromName(name) {
+    if (/\.png$/i.test(name)) return "image/png";
+    if (/\.webp$/i.test(name)) return "image/webp";
+    if (/\.gif$/i.test(name)) return "image/gif";
+    return "image/jpeg";
+  }
+
+  function isIgnoredZipPath(path) {
+    const normalized = String(path || "").replace(/\\/g, "/");
+    const base = basename(normalized);
+    return (
+      !base ||
+      base.startsWith(".") ||
+      normalized.includes("__MACOSX/") ||
+      base === "Thumbs.db"
+    );
+  }
+
+  function resetImportBuffers() {
     revokePhotoUrls();
     pendingRows = null;
     unmatchedNames = [];
-    els.csvInput.value = "";
-    csvStatusKey = "csvNotChosen";
+    imagesCount = 0;
     csvPeopleCount = 0;
     csvMatchedCount = 0;
+    zipPhotoCount = 0;
+    zipPeopleCount = 0;
     els.startBtn.disabled = true;
     renderUnmatchedList();
+  }
+
+  function handleImagesSelected(fileList) {
+    clearError();
+    resetImportBuffers();
+    els.csvInput.value = "";
+    els.zipInput.value = "";
+    csvStatusKey = "csvNotChosen";
+    zipStatusKey = "zipHint";
 
     const files = Array.from(fileList || []).filter(
       (file) => file.type.startsWith("image/") || /\.(jpe?g|png|webp|gif)$/i.test(file.name)
@@ -705,7 +801,6 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     if (photoUrls.size === 0) {
       imagesStatusKey = "noImagesDetected";
       imagesCount = 0;
-      els.pickCsvBtn.disabled = true;
       refreshStatusTexts();
       showError("errPickImages");
       return;
@@ -713,13 +808,16 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
 
     imagesStatusKey = "photosLoaded";
     imagesCount = photoUrls.size;
-    els.pickCsvBtn.disabled = false;
     refreshStatusTexts();
   }
 
   async function handleCsvSelected(file) {
     clearError();
     if (!file) return;
+    els.zipInput.value = "";
+    zipStatusKey = "zipHint";
+    zipPhotoCount = 0;
+    zipPeopleCount = 0;
 
     try {
       const text = await file.text();
@@ -749,6 +847,96 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     }
   }
 
+  async function handleZipSelected(file) {
+    clearError();
+    if (!file) return;
+
+    if (typeof JSZip === "undefined") {
+      showError("errZipMissing");
+      return;
+    }
+
+    resetImportBuffers();
+    els.imagesInput.value = "";
+    els.csvInput.value = "";
+    imagesStatusKey = "noPhotos";
+    csvStatusKey = "pickPhotosFirst";
+    zipStatusKey = "zipHint";
+    refreshStatusTexts();
+
+    try {
+      const zip = await JSZip.loadAsync(file);
+      /** @type {{ path: string, entry: JSZip.JSZipObject, depth: number, base: string }[]} */
+      const csvCandidates = [];
+      /** @type {{ path: string, entry: JSZip.JSZipObject, base: string }[]} */
+      const imageEntries = [];
+
+      zip.forEach((relativePath, entry) => {
+        if (entry.dir || isIgnoredZipPath(relativePath)) return;
+        const base = basename(relativePath);
+        const depth = relativePath.replace(/\\/g, "/").split("/").filter(Boolean).length;
+
+        if (/\.csv$/i.test(base)) {
+          csvCandidates.push({ path: relativePath, entry, depth, base });
+          return;
+        }
+
+        if (/\.(jpe?g|png|webp|gif)$/i.test(base)) {
+          imageEntries.push({ path: relativePath, entry, base });
+        }
+      });
+
+      if (csvCandidates.length === 0) {
+        showError("errZipNoCsv");
+        refreshStatusTexts();
+        return;
+      }
+
+      csvCandidates.sort((a, b) => {
+        const score = (item) => (/personen/i.test(item.base) ? 0 : 1);
+        const byName = score(a) - score(b);
+        if (byName !== 0) return byName;
+        return a.depth - b.depth || a.path.localeCompare(b.path);
+      });
+
+      const csvText = await csvCandidates[0].entry.async("string");
+      const rows = parseCsv(csvText);
+      if (rows.length === 0) {
+        showError("errNoPeople");
+        refreshStatusTexts();
+        return;
+      }
+
+      for (const item of imageEntries) {
+        const key = normalizeKey(item.base);
+        if (!key || photoUrls.has(key)) continue;
+        const bytes = await item.entry.async("uint8array");
+        const blob = new Blob([bytes], { type: mimeFromName(item.base) });
+        photoUrls.set(key, URL.createObjectURL(blob));
+      }
+
+      if (photoUrls.size === 0) {
+        showError("errZipNoImages");
+        refreshStatusTexts();
+        return;
+      }
+
+      imagesStatusKey = "photosLoaded";
+      imagesCount = photoUrls.size;
+      zipPhotoCount = photoUrls.size;
+      zipPeopleCount = rows.length;
+      zipStatusKey = "zipLoaded";
+      setCsvImportResult(rows);
+    } catch (err) {
+      resetImportBuffers();
+      imagesStatusKey = "noPhotos";
+      csvStatusKey = "pickPhotosFirst";
+      zipStatusKey = "zipHint";
+      refreshStatusTexts();
+      showError("errZipGeneric");
+    }
+  }
+
   function startGame() {
     clearError();
     if (!pendingRows || pendingRows.length === 0 || photoUrls.size === 0) {
@@ -768,7 +956,10 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     unmatchedNames = [];
     els.imagesInput.value = "";
     els.csvInput.value = "";
-    els.pickCsvBtn.disabled = true;
+    els.zipInput.value = "";
+    zipStatusKey = "zipHint";
+    zipPhotoCount = 0;
+    zipPeopleCount = 0;
     els.startBtn.disabled = true;
 
     try {
@@ -800,7 +991,6 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       csvStatusKey = "pickPhotosFirst";
       csvPeopleCount = 0;
       csvMatchedCount = 0;
-      els.pickCsvBtn.disabled = true;
       els.startBtn.disabled = true;
       refreshStatusTexts();
       showError("errDemoLoad");
@@ -817,16 +1007,23 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     });
     els.langBtn.addEventListener("click", toggleLanguage);
 
-    els.pickImagesBtn.addEventListener("click", () => els.imagesInput.click());
+    els.pickImagesBtn.addEventListener("click", () => {
+      if (!els.pickImagesBtn.disabled) els.imagesInput.click();
+    });
     els.pickCsvBtn.addEventListener("click", () => {
       if (!els.pickCsvBtn.disabled) els.csvInput.click();
     });
+    // ZIP uses <label for="zip-input"> so the OS file dialog opens natively.
     els.imagesInput.addEventListener("change", () => {
       handleImagesSelected(els.imagesInput.files);
     });
     els.csvInput.addEventListener("change", () => {
       const file = els.csvInput.files && els.csvInput.files[0];
       handleCsvSelected(file);
+    });
+    els.zipInput.addEventListener("change", () => {
+      const file = els.zipInput.files && els.zipInput.files[0];
+      handleZipSelected(file);
     });
     els.startBtn.addEventListener("click", startGame);
     els.restartBtn.addEventListener("click", restartGame);

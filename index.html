@@ -25,6 +25,7 @@
 
     <input id="images-input" type="file" accept="image/*" multiple class="sr-only" tabindex="-1" />
     <input id="csv-input" type="file" accept=".csv,text/csv" class="sr-only" tabindex="-1" />
+    <input id="zip-input" type="file" accept=".zip,application/zip,application/x-zip-compressed" class="sr-only" tabindex="-1" />
 
     <div class="app-shell mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-6 pt-4">
       <header class="mb-5 flex items-start justify-between gap-3">
@@ -102,6 +103,15 @@
                   <p id="import-misses" class="import-misses is-hidden" hidden></p>
                 </div>
               </li>
+              <li class="import-step">
+                <span class="step-badge">3</span>
+                <div class="step-body">
+                  <label id="pick-zip-btn" for="zip-input" class="btn btn-neutral btn-block btn-lg action-btn">
+                    ZIP wählen
+                  </label>
+                  <p id="zip-status" class="step-status">Optional: ein ZIP mit Fotos + CSV</p>
+                </div>
+              </li>
             </ol>
 
             <button id="start-btn" type="button" class="btn btn-accent btn-block btn-lg action-btn" disabled>
@@ -167,6 +177,7 @@
       </main>
     </div>
 
-    <script src="app.js" defer></script>
+    <script src="vendor/jszip.min.js"></script>
+    <script src="app.js?v=zip4" defer></script>
   </body>
 </html>
