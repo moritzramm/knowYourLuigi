@@ -177,6 +177,11 @@ body {
   opacity: 0.75;
 }
 
+#import-pickers {
+  display: grid;
+  gap: 20px;
+}
+
 .demo-link {
   color: #0a4cf5;
   font-weight: 800;
@@ -199,6 +204,7 @@ body {
   padding: 0;
   display: grid;
   gap: 1rem;
+  margin-top: 0;
 }
 
 .import-step {
@@ -219,6 +225,47 @@ body {
   color: #17182a;
   font-family: var(--font-display);
   font-weight: 700;
+}
+
+.step-badge-wide {
+  width: auto;
+  min-width: 2.35rem;
+  padding: 0 0.35rem;
+  font-size: 0.78rem;
+}
+
+.step-badge-a {
+  background: var(--sky);
+  color: var(--color-primary-content);
+}
+
+.step-badge-b {
+  background: var(--yellow);
+  color: #17182a;
+}
+
+.step-badge-c {
+  background: var(--pink);
+  color: var(--color-secondary-content);
+}
+
+.import-ready-summary {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.import-ready-actions {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+.restart-import-btn {
+  font-weight: 600;
+  opacity: 0.85;
+  box-shadow: none;
 }
 
 .step-body {
@@ -246,6 +293,19 @@ body {
 
 .summary-card .card-body {
   padding: 1.75rem 1.5rem;
+}
+
+.summary-celebrate {
+  display: grid;
+  place-items: center;
+  margin: 0 auto 0.1rem;
+}
+
+.summary-celebrate-img {
+  display: block;
+  width: 5.5rem;
+  height: 5.5rem;
+  object-fit: contain;
 }
 
 .summary-text {

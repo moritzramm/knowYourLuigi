@@ -39,10 +39,14 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       restartTitle: "Neu starten",
       themeAria: "Hell-/Dunkelmodus umschalten",
       importTitle: "Daten importieren",
+      importReadyTitle: "Daten geladen",
       importLeadBefore:
         "Server-ZIP, lokales ZIP oder Fotos+CSV — entschlüsselte Daten bleiben nur in deinem Browser. Noch keine Daten? ",
       tryThese: "Diese ausprobieren",
       importLeadAfter: ".",
+      importReadyZip: (photos, people) => `ZIP geladen · ${photos} Fotos · ${people} Personen`,
+      importReadyFiles: (photos, people, matched) =>
+        `${photos} Foto${photos === 1 ? "" : "s"} · ${people} Personen · ${matched} mit Foto`,
       pickImages: "Bilder wählen",
       pickCsv: "CSV wählen",
       pickZip: "ZIP wählen (Bilder + CSV)",
@@ -56,6 +60,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       zipLoading: "ZIP wird geladen…",
       remoteHint: "AES-ZIP vom Server (Passwort im Dialog)",
       start: "Los geht’s",
+      restartImport: "Import neu starten",
       noPhotos: "Noch keine Fotos",
       pickPhotosFirst: "Zuerst Fotos wählen",
       csvNotChosen: "CSV noch nicht gewählt",
@@ -110,10 +115,14 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       restartTitle: "Restart",
       themeAria: "Toggle light/dark mode",
       importTitle: "Import data",
+      importReadyTitle: "Data loaded",
       importLeadBefore:
         "Server ZIP, local ZIP, or photos+CSV — decrypted data stays in your browser only. No data yet? ",
       tryThese: "Try these",
       importLeadAfter: ".",
+      importReadyZip: (photos, people) => `ZIP loaded · ${photos} photos · ${people} people`,
+      importReadyFiles: (photos, people, matched) =>
+        `${photos} photo${photos === 1 ? "" : "s"} · ${people} people · ${matched} with photo`,
       pickImages: "Choose images",
       pickCsv: "Choose CSV",
       pickZip: "Choose ZIP (photos + CSV)",
@@ -127,6 +136,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       zipLoading: "Loading ZIP…",
       remoteHint: "AES ZIP from server (password in dialog)",
       start: "Let’s go",
+      restartImport: "Restart import",
       noPhotos: "No photos yet",
       pickPhotosFirst: "Choose photos first",
       csvNotChosen: "CSV not chosen yet",
@@ -186,6 +196,11 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     gameScreen: document.getElementById("game-screen"),
     importTitle: document.getElementById("import-title"),
     importLead: document.getElementById("import-lead"),
+    importPickers: document.getElementById("import-pickers"),
+    importReady: document.getElementById("import-ready"),
+    importReadyTitle: document.getElementById("import-ready-title"),
+    importReadySummary: document.getElementById("import-ready-summary"),
+    importReadyMisses: document.getElementById("import-ready-misses"),
     imagesInput: document.getElementById("images-input"),
     csvInput: document.getElementById("csv-input"),
     zipInput: document.getElementById("zip-input"),
@@ -203,6 +218,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     zipPasswordCancel: document.getElementById("zip-password-cancel"),
     zipPasswordConfirm: document.getElementById("zip-password-confirm"),
     startBtn: document.getElementById("start-btn"),
+    restartImportBtn: document.getElementById("restart-import-btn"),
     imagesStatus: document.getElementById("images-status"),
     csvStatus: document.getElementById("csv-status"),
     zipStatus: document.getElementById("zip-status"),
@@ -233,9 +249,12 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   let people = [];
   /** @type {typeof people} */
   let queue = [];
-  /** Keys of cards left via Next — Prev restores them in reverse order. */
-  /** @type {string[]} */
-  let navHistory = [];
+  /** Cards left behind (skip / answer) — browsable with Prev/Next. */
+  /** @type {typeof people} */
+  let pastCards = [];
+  /** When set, UI shows pastCards[index] instead of the live queue head. */
+  /** @type {number | null} */
+  let viewingPastIndex = null;
   /** @type {Set<string>} */
   let requeuedKeys = new Set();
   /** @type {Set<string>} */
@@ -321,12 +340,8 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
 
   function initTheme() {
     const saved = localStorage.getItem(THEME_KEY);
-    if (saved === "dark" || saved === "light") {
-      applyTheme(saved);
-      return;
-    }
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    applyTheme(prefersDark ? "dark" : "light");
+    // Default is always dark (ignore system preference). Honor an explicit user choice.
+    applyTheme(saved === "light" ? "light" : "dark");
   }
 
   function isZipInactive() {
@@ -410,6 +425,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
 
     updateImportAvailability();
     renderUnmatchedList();
+    updateImportReadyView();
 
     if (summaryVisible) {
       els.summaryTitle.textContent = s.summaryTitle;
@@ -442,6 +458,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     }
 
     els.importTitle.textContent = s.importTitle;
+    if (els.importReadyTitle) els.importReadyTitle.textContent = s.importReadyTitle;
     renderImportLead();
     els.pickImagesBtn.textContent = s.pickImages;
     els.pickCsvBtn.textContent = s.pickCsv;
@@ -455,6 +472,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     if (els.zipPasswordConfirm) els.zipPasswordConfirm.textContent = s.zipPasswordConfirm;
     if (els.zipPasswordBackdrop) els.zipPasswordBackdrop.setAttribute("aria-label", s.zipPasswordCancel);
     els.startBtn.textContent = s.start;
+    if (els.restartImportBtn) els.restartImportBtn.textContent = s.restartImport;
 
     els.prevBtn.setAttribute("aria-label", s.prevAria);
     els.nextBtn.setAttribute("aria-label", s.nextAria);
@@ -596,9 +614,67 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     photoUrls = new Map();
   }
 
+  function isImportReady() {
+    return photoUrls.size > 0 && Array.isArray(pendingRows) && pendingRows.length > 0;
+  }
+
+  function updateImportReadyView() {
+    const ready = isImportReady();
+    const s = t();
+
+    if (els.importPickers) {
+      els.importPickers.classList.toggle("is-hidden", ready);
+      els.importPickers.hidden = ready;
+    }
+    if (els.importReady) {
+      els.importReady.classList.toggle("is-hidden", !ready);
+      els.importReady.hidden = !ready;
+    }
+
+    if (!ready || !els.importReadySummary) return;
+
+    if (els.importReadyTitle) els.importReadyTitle.textContent = s.importReadyTitle;
+
+    if (zipStatusKey === "zipLoaded" || remoteStatusKey === "zipLoaded") {
+      els.importReadySummary.textContent = s.importReadyZip(zipPhotoCount || photoUrls.size, csvPeopleCount);
+    } else {
+      els.importReadySummary.textContent = s.importReadyFiles(
+        imagesCount || photoUrls.size,
+        csvPeopleCount,
+        csvMatchedCount
+      );
+    }
+
+    if (els.importReadyMisses) {
+      if (unmatchedNames.length) {
+        const title = s.unmatchedTitle(unmatchedNames.length);
+        els.importReadyMisses.textContent = `${title} ${unmatchedNames.join(", ")}`;
+        els.importReadyMisses.hidden = false;
+        els.importReadyMisses.classList.remove("is-hidden");
+      } else {
+        els.importReadyMisses.textContent = "";
+        els.importReadyMisses.hidden = true;
+        els.importReadyMisses.classList.add("is-hidden");
+      }
+    }
+  }
+
   function updateStartEnabled() {
-    const ready = photoUrls.size > 0 && Array.isArray(pendingRows) && pendingRows.length > 0;
-    els.startBtn.disabled = !ready;
+    updateImportReadyView();
+  }
+
+  function restartImport() {
+    clearError();
+    resetImportBuffers();
+    els.imagesInput.value = "";
+    els.csvInput.value = "";
+    els.zipInput.value = "";
+    imagesStatusKey = "noPhotos";
+    csvStatusKey = "pickPhotosFirst";
+    zipStatusKey = "zipHint";
+    remoteStatusKey = "remoteHint";
+    if (els.pickCsvBtn) els.pickCsvBtn.disabled = true;
+    refreshStatusTexts();
   }
 
   function showImportScreen() {
@@ -629,6 +705,14 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     els.summaryTitle.textContent = t().summaryTitle;
     els.summaryText.textContent = t().summaryText(firstTryCount, neededRetryCount);
     els.summaryContinueBtn.textContent = t().summaryContinue;
+
+    const celebrateImg = document.getElementById("summary-celebrate-img");
+    if (celebrateImg) {
+      const src = celebrateImg.getAttribute("src") || "vendor/emoji/1f973.webp";
+      celebrateImg.removeAttribute("src");
+      void celebrateImg.offsetWidth;
+      celebrateImg.src = src;
+    }
   }
 
   function restartGame() {
@@ -685,6 +769,20 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     });
   }
 
+  function isViewingPast() {
+    return viewingPastIndex !== null;
+  }
+
+  function displayedPerson() {
+    if (isViewingPast()) return pastCards[viewingPastIndex];
+    return queue[0];
+  }
+
+  function rememberPastCard(person) {
+    if (!person) return;
+    pastCards.push(person);
+  }
+
   function setRevealed(isRevealed) {
     revealed = isRevealed;
     els.details.classList.toggle("is-masked", !isRevealed);
@@ -732,7 +830,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   }
 
   function renderCard() {
-    const person = queue[0];
+    const person = displayedPerson();
     if (!person) return;
 
     updateProgressText();
@@ -747,22 +845,20 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     updateSkipButtons();
   }
 
-  function historyHasRestorableCard() {
-    for (let i = navHistory.length - 1; i >= 0; i -= 1) {
-      const key = navHistory[i];
-      if (queue.some((person) => personKey(person) === key)) return true;
-    }
-    return false;
-  }
-
   function updateSkipButtons() {
-    els.prevBtn.disabled = !historyHasRestorableCard();
-    els.nextBtn.disabled = queue.length <= 1;
+    if (isViewingPast()) {
+      els.prevBtn.disabled = viewingPastIndex <= 0;
+      els.nextBtn.disabled = false;
+    } else {
+      els.prevBtn.disabled = pastCards.length === 0;
+      els.nextBtn.disabled = queue.length <= 1;
+    }
   }
 
   function startRound(source = people) {
     queue = shuffle(source);
-    navHistory = [];
+    pastCards = [];
+    viewingPastIndex = null;
     requeuedKeys = new Set();
     wrongThisRound = new Set();
     firstTryCount = 0;
@@ -792,55 +888,110 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   }
 
   function reveal() {
-    if (!isGameActive() || revealed) return;
+    if (revealed) return;
+    if (!isViewingPast() && !isGameActive()) return;
     setRevealed(true);
   }
 
-  function markRight() {
-    if (!isGameActive() || !revealed || queue.length === 0) return;
-    const [done] = queue.splice(0, 1);
-    const key = personKey(done);
+  function scoreRight(person, { remember } = { remember: true }) {
+    const key = personKey(person);
     if (wrongThisRound.has(key)) {
       neededRetryCount += 1;
     } else {
       firstTryCount += 1;
     }
     requeuedKeys.delete(key);
+    if (remember) rememberPastCard(person);
+  }
+
+  function removeFromQueueByKey(key) {
+    const idx = queue.findIndex((person) => personKey(person) === key);
+    if (idx === -1) return null;
+    const [person] = queue.splice(idx, 1);
+    return person;
+  }
+
+  function markRight() {
+    if (!revealed || summaryVisible) return;
+
+    if (isViewingPast()) {
+      const person = pastCards[viewingPastIndex];
+      if (!person) return;
+      const key = personKey(person);
+      const removed = removeFromQueueByKey(key);
+      if (removed) scoreRight(removed, { remember: false });
+      viewingPastIndex = null;
+      finishOrContinue();
+      return;
+    }
+
+    if (!isGameActive() || queue.length === 0) return;
+    const [done] = queue.splice(0, 1);
+    scoreRight(done, { remember: true });
+    viewingPastIndex = null;
     finishOrContinue();
   }
 
   function markWrong() {
-    if (!isGameActive() || !revealed || queue.length === 0) return;
+    if (!revealed || summaryVisible) return;
+
+    if (isViewingPast()) {
+      const person = pastCards[viewingPastIndex];
+      if (!person) return;
+      const key = personKey(person);
+      removeFromQueueByKey(key);
+      wrongThisRound.add(key);
+      requeuedKeys.add(key);
+      const insertAt = Math.min(randomReinsertGap(), queue.length);
+      queue.splice(insertAt, 0, person);
+      viewingPastIndex = null;
+      renderCard();
+      return;
+    }
+
+    if (!isGameActive() || queue.length === 0) return;
     const [card] = queue.splice(0, 1);
     const key = personKey(card);
     wrongThisRound.add(key);
     requeuedKeys.add(key);
+    rememberPastCard(card);
     const insertAt = Math.min(randomReinsertGap(), queue.length);
     queue.splice(insertAt, 0, card);
+    viewingPastIndex = null;
     renderCard();
   }
 
   function skipPrev() {
-    if (!isGameActive()) return;
-
-    while (navHistory.length > 0) {
-      const key = navHistory.pop();
-      const idx = queue.findIndex((person) => personKey(person) === key);
-      if (idx === -1) continue;
-      if (idx === 0) {
-        renderCard();
-        return;
-      }
-      const [person] = queue.splice(idx, 1);
-      queue.unshift(person);
+    if (summaryVisible || people.length === 0) return;
+    if (isViewingPast()) {
+      if (viewingPastIndex <= 0) return;
+      viewingPastIndex -= 1;
       renderCard();
       return;
     }
+    if (pastCards.length === 0) return;
+    viewingPastIndex = pastCards.length - 1;
+    renderCard();
   }
 
   function skipNext() {
+    if (summaryVisible || people.length === 0) return;
+    if (isViewingPast()) {
+      if (viewingPastIndex < pastCards.length - 1) {
+        viewingPastIndex += 1;
+        renderCard();
+        return;
+      }
+      viewingPastIndex = null;
+      if (queue.length === 0) {
+        showSummaryScreen();
+        return;
+      }
+      renderCard();
+      return;
+    }
     if (!isGameActive() || queue.length <= 1) return;
-    navHistory.push(personKey(queue[0]));
+    rememberPastCard(queue[0]);
     queue.push(queue.shift());
     renderCard();
   }
@@ -858,7 +1009,8 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       return;
     }
 
-    if (!isGameActive()) return;
+    const browsing = isViewingPast() || isGameActive();
+    if (!browsing) return;
 
     if (event.key === " " || event.code === "Space") {
       event.preventDefault();
@@ -917,7 +1069,6 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     csvMatchedCount = 0;
     zipPhotoCount = 0;
     zipPeopleCount = 0;
-    els.startBtn.disabled = true;
     renderUnmatchedList();
   }
 
@@ -1338,6 +1489,9 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       });
     }
     els.startBtn.addEventListener("click", startGame);
+    if (els.restartImportBtn) {
+      els.restartImportBtn.addEventListener("click", restartImport);
+    }
     els.restartBtn.addEventListener("click", restartGame);
     els.summaryContinueBtn.addEventListener("click", continueAfterSummary);
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="light" data-lang="de">
+<html lang="de" data-theme="dark" data-lang="de">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -78,54 +78,66 @@
 
         <section id="import-screen" class="card flashcard import-card">
           <div class="card-body gap-4">
-            <div>
-              <h2 id="import-title" class="import-title">Daten importieren</h2>
-              <p id="import-lead" class="import-lead"></p>
+            <div id="import-pickers">
+              <div>
+                <h2 id="import-title" class="import-title">Daten importieren</h2>
+                <p id="import-lead" class="import-lead"></p>
+              </div>
+
+              <ol class="import-steps">
+                <li class="import-step">
+                  <span class="step-badge step-badge-a">A</span>
+                  <div class="step-body">
+                    <button id="load-remote-zip-btn" type="button" class="btn btn-primary btn-block btn-lg action-btn remote-zip-btn">
+                      Vom Server laden
+                    </button>
+                    <p id="remote-status" class="step-status">AES-ZIP vom Server (Passwort im Dialog)</p>
+                  </div>
+                </li>
+                <li class="import-step">
+                  <span class="step-badge step-badge-b">B</span>
+                  <div class="step-body">
+                    <label id="pick-zip-btn" for="zip-input" class="btn btn-neutral btn-block btn-lg action-btn">
+                      ZIP wählen
+                    </label>
+                    <p id="zip-status" class="step-status">Lokales ZIP mit Fotos + CSV (auch AES)</p>
+                  </div>
+                </li>
+                <li class="import-step">
+                  <span class="step-badge step-badge-wide step-badge-c">C1</span>
+                  <div class="step-body">
+                    <button id="pick-images-btn" type="button" class="btn btn-secondary btn-block btn-lg action-btn">
+                      Bilder wählen
+                    </button>
+                    <p id="images-status" class="step-status">Noch keine Fotos</p>
+                  </div>
+                </li>
+                <li class="import-step">
+                  <span class="step-badge step-badge-wide step-badge-c">C2</span>
+                  <div class="step-body">
+                    <button id="pick-csv-btn" type="button" class="btn btn-secondary btn-block btn-lg action-btn" disabled>
+                      CSV wählen
+                    </button>
+                    <p id="csv-status" class="step-status">Zuerst Fotos wählen</p>
+                    <p id="import-misses" class="import-misses is-hidden" hidden></p>
+                  </div>
+                </li>
+              </ol>
             </div>
 
-            <ol class="import-steps">
-              <li class="import-step">
-                <span class="step-badge">1</span>
-                <div class="step-body">
-                  <button id="load-remote-zip-btn" type="button" class="btn btn-primary btn-block btn-lg action-btn remote-zip-btn">
-                    Vom Server laden
-                  </button>
-                  <p id="remote-status" class="step-status">AES-ZIP vom Server (Passwort im Dialog)</p>
-                </div>
-              </li>
-              <li class="import-step">
-                <span class="step-badge">2</span>
-                <div class="step-body">
-                  <label id="pick-zip-btn" for="zip-input" class="btn btn-neutral btn-block btn-lg action-btn">
-                    ZIP wählen
-                  </label>
-                  <p id="zip-status" class="step-status">Lokales ZIP mit Fotos + CSV (auch AES)</p>
-                </div>
-              </li>
-              <li class="import-step">
-                <span class="step-badge">3</span>
-                <div class="step-body">
-                  <button id="pick-images-btn" type="button" class="btn btn-secondary btn-block btn-lg action-btn">
-                    Bilder wählen
-                  </button>
-                  <p id="images-status" class="step-status">Noch keine Fotos</p>
-                </div>
-              </li>
-              <li class="import-step">
-                <span class="step-badge">4</span>
-                <div class="step-body">
-                  <button id="pick-csv-btn" type="button" class="btn btn-secondary btn-block btn-lg action-btn" disabled>
-                    CSV wählen
-                  </button>
-                  <p id="csv-status" class="step-status">Zuerst Fotos wählen</p>
-                  <p id="import-misses" class="import-misses is-hidden" hidden></p>
-                </div>
-              </li>
-            </ol>
-
-            <button id="start-btn" type="button" class="btn btn-accent btn-block btn-lg action-btn" disabled>
-              Los geht’s
-            </button>
+            <div id="import-ready" class="import-ready is-hidden" hidden>
+              <h2 id="import-ready-title" class="import-title">Daten geladen</h2>
+              <p id="import-ready-summary" class="import-ready-summary"></p>
+              <p id="import-ready-misses" class="import-misses is-hidden" hidden></p>
+              <div class="import-ready-actions">
+                <button id="start-btn" type="button" class="btn btn-accent btn-block btn-lg action-btn">
+                  Los geht’s
+                </button>
+                <button id="restart-import-btn" type="button" class="btn btn-ghost btn-block btn-lg action-btn restart-import-btn">
+                  Import neu starten
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -176,6 +188,16 @@
 
         <section id="summary-screen" class="card flashcard summary-card is-hidden" aria-live="polite">
           <div class="card-body gap-4 text-center">
+            <div class="summary-celebrate" aria-hidden="true">
+              <img
+                id="summary-celebrate-img"
+                class="summary-celebrate-img"
+                src="vendor/emoji/1f973.webp"
+                width="96"
+                height="96"
+                alt=""
+              />
+            </div>
             <h2 id="summary-title" class="import-title">Runde geschafft</h2>
             <p id="summary-text" class="summary-text"></p>
             <button id="summary-continue-btn" type="button" class="btn btn-accent btn-block btn-lg action-btn">
@@ -216,6 +238,6 @@
     </div>
 
     <script src="vendor/zip.min.js"></script>
-    <script src="app.js?v=aes6" defer></script>
+    <script src="app.js?v=aes13" defer></script>
   </body>
 </html>

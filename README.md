@@ -29,10 +29,10 @@ Keep the whole project folder together.
 
 On the first screen:
 
-1. **Vom Server laden** / **Load from server** — fetches `data/team.zip`; enter the password in the dialog (leave empty if unencrypted).
-2. **Or** **ZIP wählen** / **Choose ZIP** — pick a local ZIP (AES password dialog if needed).
-3. **Or** **Bilder wählen** + **CSV wählen** — select photos and CSV separately.
-4. Tap **Los geht’s** / **Let’s go**.
+- **A** **Vom Server laden** / **Load from server** — fetches `data/team.zip`; enter the password in the dialog (leave empty if unencrypted).
+- **B** **ZIP wählen** / **Choose ZIP** — pick a local ZIP (AES password dialog if needed).
+- **C1** + **C2** **Bilder wählen** + **CSV wählen** — select photos and CSV separately.
+- After a successful import, only the success summary and **Los geht’s** / **Let’s go** remain.
 
 **Local tip:** Opening `index.html` via double-click (`file://`) cannot use **Load from server**. Use **ZIP wählen**, or run:
 
@@ -128,6 +128,7 @@ To offer a shared encrypted package on Pages, place an AES ZIP at `data/team.zip
 | `index.html`, `app.js`, `style.css` | App |
 | `vendor/` | Styles, script, fonts (works offline / without CDN) |
 | `vendor/zip.min.js` | ZIP + AES decrypt (zip.js) |
+| `vendor/emoji/1f973.webp` | Animated Noto party emoji (CC BY 4.0) |
 | `data/` | Optional `team.zip` for “Load from server” (ignored by git) |
 | `bilder0/` | Demo photos |
 | `personen0.csv` | Demo CSV (also embedded for `file://`) |
