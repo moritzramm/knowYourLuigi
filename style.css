@@ -331,6 +331,17 @@ body {
   line-height: 1.45;
 }
 
+.summary-actions {
+  display: grid;
+  gap: 24px;
+}
+
+.summary-misses-btn {
+  font-weight: 600;
+  opacity: 0.85;
+  box-shadow: none;
+}
+
 #import-screen .btn:disabled,
 #import-screen .btn.is-inactive,
 #start-btn:disabled {

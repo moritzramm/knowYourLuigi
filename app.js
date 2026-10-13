@@ -79,6 +79,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       summaryText: (firstTry, neededRetry) =>
         `${firstTry} beim ersten Versuch · ${neededRetry} mit Wiederholung`,
       summaryContinue: "Nächste Runde",
+      summaryMisses: "Nur Fehler üben",
       errPickImages: "Bitte Bilddateien auswählen (JPG, PNG, WebP …).",
       errNoPeople: "In der CSV wurden keine Personen gefunden.",
       errNeedBoth: "Bitte zuerst Bilder und CSV wählen.",
@@ -155,6 +156,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       summaryText: (firstTry, neededRetry) =>
         `${firstTry} first-try · ${neededRetry} needed retry`,
       summaryContinue: "Next round",
+      summaryMisses: "Practice misses only",
       errPickImages: "Please select image files (JPG, PNG, WebP …).",
       errNoPeople: "No people were found in the CSV.",
       errNeedBoth: "Please choose images and a CSV first.",
@@ -227,6 +229,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     summaryTitle: document.getElementById("summary-title"),
     summaryText: document.getElementById("summary-text"),
     summaryContinueBtn: document.getElementById("summary-continue-btn"),
+    summaryMissesBtn: document.getElementById("summary-misses-btn"),
     photoButton: document.getElementById("photo-button"),
     photo: document.getElementById("photo"),
     photoPlaceholder: document.getElementById("photo-placeholder"),
@@ -259,6 +262,9 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
   let requeuedKeys = new Set();
   /** @type {Set<string>} */
   let wrongThisRound = new Set();
+  /** People marked wrong in the round that just ended (for miss-only replay). */
+  /** @type {typeof people} */
+  let lastRoundMissed = [];
   let firstTryCount = 0;
   let neededRetryCount = 0;
   /** @type {string[]} */
@@ -431,6 +437,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
       els.summaryTitle.textContent = s.summaryTitle;
       els.summaryText.textContent = s.summaryText(firstTryCount, neededRetryCount);
       els.summaryContinueBtn.textContent = s.summaryContinue;
+      updateSummaryMissesButton();
     }
 
     if (errorKey) {
@@ -486,6 +493,7 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     els.rightBtn.textContent = s.right;
     els.summaryTitle.textContent = s.summaryTitle;
     els.summaryContinueBtn.textContent = s.summaryContinue;
+    updateSummaryMissesButton();
 
     refreshStatusTexts();
 
@@ -697,14 +705,30 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     els.restartBtn.classList.remove("is-hidden");
   }
 
+  function snapshotMissedPeople() {
+    lastRoundMissed = people.filter((person) => wrongThisRound.has(personKey(person)));
+  }
+
+  function updateSummaryMissesButton() {
+    const btn = els.summaryMissesBtn;
+    if (!btn) return;
+    const hasMisses = lastRoundMissed.length > 0;
+    btn.hidden = !hasMisses;
+    btn.classList.toggle("is-hidden", !hasMisses);
+    btn.disabled = !hasMisses;
+    btn.textContent = t().summaryMisses;
+  }
+
   function showSummaryScreen() {
     summaryVisible = true;
+    snapshotMissedPeople();
     els.gameScreen.classList.add("is-hidden");
     els.summaryScreen.classList.remove("is-hidden");
     els.progress.classList.add("is-hidden");
     els.summaryTitle.textContent = t().summaryTitle;
     els.summaryText.textContent = t().summaryText(firstTryCount, neededRetryCount);
     els.summaryContinueBtn.textContent = t().summaryContinue;
+    updateSummaryMissesButton();
 
     const celebrateImg = document.getElementById("summary-celebrate-img");
     if (celebrateImg) {
@@ -726,6 +750,12 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     if (!summaryVisible) return;
     showGameScreen();
     startRound(people);
+  }
+
+  function continueWithMisses() {
+    if (!summaryVisible || lastRoundMissed.length === 0) return;
+    showGameScreen();
+    startRound(lastRoundMissed);
   }
 
   function getUnmatchedNames(rows) {
@@ -1494,6 +1524,9 @@ Vincenzo Biasi.jpg;Vincenzo Biasi;Internal Functions;Geschäftsführer;levigo sy
     }
     els.restartBtn.addEventListener("click", restartGame);
     els.summaryContinueBtn.addEventListener("click", continueAfterSummary);
+    if (els.summaryMissesBtn) {
+      els.summaryMissesBtn.addEventListener("click", continueWithMisses);
+    }
 
     els.photoButton.addEventListener("click", reveal);
     els.revealBtn.addEventListener("click", reveal);
